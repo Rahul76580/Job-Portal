@@ -6,6 +6,7 @@ import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 import ResumeBuilderModal from "../components/ResumeBuilderModal";
 import PdfPreviewModal from "../components/PdfPreviewModal";
 
@@ -13,6 +14,7 @@ const Application = () => {
   const { user } = useUser();
   const { openSignIn } = useClerk();
   const { getToken } = useAuth();
+  const navigate = useNavigate();
 
   const [isEdit, setIsEdit] = useState(false);
   const [resume, setResume] = useState(null);
@@ -28,10 +30,41 @@ const Application = () => {
     fetchUserApplications,
     candidateUploadedResume,
     saveUploadedPdfResume,
-    candidateBuiltResume
+    candidateBuiltResume,
+    companyToken,
+    companyData
   } = useContext(AppContext);
 
-  // Auth Guard: If candidate is not signed in, show clean authentication lock screen
+  // Auth Guard 1: If recruiter session is active, block access to candidate profile
+  if (companyToken) {
+    return (
+      <>
+        <Navbar />
+        <div className="container mx-auto min-h-[65vh] flex items-center justify-center p-6 text-center">
+          <div className="bg-white border border-gray-200/80 rounded-3xl p-8 sm:p-10 shadow-xl max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-purple-50 text-purple-700 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-purple-200">
+              🏢
+            </div>
+            <h2 className="text-xl font-extrabold text-gray-900 mb-2">
+              Recruiter Session Active
+            </h2>
+            <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+              You are currently logged in under Employer Mode ({companyData?.name || "Recruiter"}). Please logout from Employer Hub to view candidate applications.
+            </p>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              🏢 Go to Employer Dashboard
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  // Auth Guard 2: If candidate is not signed in, show clean authentication lock screen
   if (!user) {
     return (
       <>

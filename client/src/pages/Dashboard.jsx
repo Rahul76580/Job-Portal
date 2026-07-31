@@ -2,9 +2,12 @@ import React, { useContext, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { AppContext } from "../contex/AppContex";
+import { useUser, useClerk } from "@clerk/clerk-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const { companyData, setCompanyData, setCompanyToken, companyToken, setShowRecruiterLogin } =
     useContext(AppContext);
 
@@ -26,7 +29,43 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
-  // Auth Guard: If recruiter is not logged in, prompt recruiter authentication
+  // Auth Guard 1: If candidate is logged in, block access to Recruiter Hub
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 text-center">
+        <div className="bg-white border border-gray-200/90 rounded-3xl p-8 sm:p-10 shadow-xl max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-blue-200">
+            👤
+          </div>
+          <h2 className="text-xl font-extrabold text-gray-900 mb-2">
+            Candidate Session Active
+          </h2>
+          <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+            You are currently signed in under Candidate Mode ({(user.firstName || "") + " " + (user.lastName || "")}). Please sign out of Candidate Mode first to access the Employer Hub.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                signOut();
+                navigate("/");
+              }}
+              className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              Sign Out of Candidate Mode
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+            >
+              ← Return to Candidate Homepage
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Auth Guard 2: If recruiter is not logged in, prompt recruiter authentication
   if (!companyToken) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 text-center">
