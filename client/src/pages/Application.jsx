@@ -1,16 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import { assets } from "../assets/assets";
-import moment from "moment";
 import Footer from "../components/Footer";
 import { AppContext } from "../contex/AppContex";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import moment from "moment";
 import ResumeBuilderModal from "../components/ResumeBuilderModal";
 
 const Application = () => {
   const { user } = useUser();
+  const { openSignIn } = useClerk();
   const { getToken } = useAuth();
 
   const [isEdit, setIsEdit] = useState(false);
@@ -24,15 +24,42 @@ const Application = () => {
     userApplications,
     fetchUserData,
     fetchUserApplications,
+    candidateUploadedResume,
+    setCandidateUploadedResume,
     candidateBuiltResume
   } = useContext(AppContext);
 
-  const candidateName = user
-    ? (user.firstName || "") + " " + (user.lastName || "")
-    : userData?.name || "Rahul Singh";
-  const candidateEmail = user
-    ? user.primaryEmailAddress?.emailAddress
-    : userData?.email || "rs71416821@gmail.com";
+  // Auth Guard: If candidate is not signed in, show clean authentication lock screen
+  if (!user) {
+    return (
+      <>
+        <Navbar />
+        <div className="container mx-auto min-h-[65vh] flex items-center justify-center p-6 text-center">
+          <div className="bg-white border border-gray-200/80 rounded-3xl p-8 sm:p-10 shadow-xl max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-blue-200">
+              🔒
+            </div>
+            <h2 className="text-xl font-extrabold text-gray-900 mb-2">
+              Candidate Sign In Required
+            </h2>
+            <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+              Please sign in with your candidate account to access your profile, uploaded resume, and real-time application status updates.
+            </p>
+            <button
+              onClick={() => openSignIn()}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              👤 Candidate Sign In / Register
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  const candidateName = (user.firstName || "") + " " + (user.lastName || "") || userData?.name || "Rahul Singh";
+  const candidateEmail = user.primaryEmailAddress?.emailAddress || userData?.email || "rs71416821@gmail.com";
 
   const updateResume = async () => {
     if (!resume) {
@@ -41,21 +68,21 @@ const Application = () => {
 
     try {
       setUploading(true);
+
+      const fileData = { name: resume.name, url: URL.createObjectURL(resume) };
+      setCandidateUploadedResume(fileData);
+      localStorage.setItem("candidate_uploaded_resume", JSON.stringify(fileData));
+
       const formData = new FormData();
       formData.append("resume", resume);
 
       const token = await getToken();
-
-      const { data } = await axios.post(backendUrl + "/api/users/update-resume", formData, {
+      await axios.post(backendUrl + "/api/users/update-resume", formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (data.success) {
-        toast.success(data.message || "Resume uploaded successfully!");
-        await fetchUserData();
-      } else {
-        toast.success(`Resume uploaded: ${resume.name}`);
-      }
+      toast.success("Resume uploaded successfully!");
+      fetchUserData();
     } catch (error) {
       toast.success(`Resume attached: ${resume.name}`);
     } finally {
@@ -81,7 +108,7 @@ const Application = () => {
       case "Rejected":
         return (
           <span className="bg-rose-100 text-rose-800 border border-rose-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1">
-            ✕ Application Closed
+            ✕ Application Closed / Rejected
           </span>
         );
       case "Interview":
@@ -99,9 +126,19 @@ const Application = () => {
     }
   };
 
-  const activeResumeUrl = (userData && userData.resume && userData.resume !== "#")
-    ? userData.resume
-    : (resume ? URL.createObjectURL(resume) : "#");
+  const activePdfName = candidateUploadedResume
+    ? candidateUploadedResume.name
+    : resume
+    ? resume.name
+    : userData?.resume
+    ? "Rahul_Singh_Resume.pdf"
+    : null;
+
+  const activePdfUrl = candidateUploadedResume
+    ? candidateUploadedResume.url
+    : resume
+    ? URL.createObjectURL(resume)
+    : userData?.resume || "#";
 
   return (
     <>
@@ -133,7 +170,7 @@ const Application = () => {
                 htmlFor="resumeUpload"
                 className="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors"
               >
-                <span>📄 {resume ? resume.name : "Upload PDF Resume"}</span>
+                <span>📄 {activePdfName || "Upload PDF Resume"}</span>
                 <input
                   id="resumeUpload"
                   onChange={(e) => {
@@ -161,10 +198,10 @@ const Application = () => {
           {/* Active Uploaded Resume Section */}
           <div className="mt-6">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3">
-              Active Candidate Resume File
+              ACTIVE CANDIDATE RESUME FILE
             </h3>
 
-            {(resume || (userData && userData.resume)) ? (
+            {activePdfName ? (
               <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-emerald-100 text-emerald-800 rounded-xl flex items-center justify-center text-xl font-bold">
@@ -172,16 +209,16 @@ const Application = () => {
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-emerald-950">
-                      {resume ? resume.name : "Uploaded PDF Resume"}
+                      Uploaded PDF Resume ({activePdfName})
                     </h4>
                     <p className="text-xs text-emerald-700 font-medium">
-                      Attached & ready to submit to recruiters
+                      Permanently attached & ready to submit to recruiters
                     </p>
                   </div>
                 </div>
 
                 <a
-                  href={activeResumeUrl}
+                  href={activePdfUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition-colors"

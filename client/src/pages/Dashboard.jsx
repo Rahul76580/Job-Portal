@@ -5,7 +5,8 @@ import { AppContext } from "../contex/AppContex";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { companyData, setCompanyData, setCompanyToken, companyToken } = useContext(AppContext);
+  const { companyData, setCompanyData, setCompanyToken, companyToken, setShowRecruiterLogin } =
+    useContext(AppContext);
 
   // Function to logout company
   const logout = () => {
@@ -24,6 +25,39 @@ const Dashboard = () => {
       navigate("/dashboard/manage-jobs");
     }
   }, [navigate]);
+
+  // Auth Guard: If recruiter is not logged in, prompt recruiter authentication
+  if (!companyToken) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 text-center">
+        <div className="bg-white border border-gray-200/90 rounded-3xl p-8 sm:p-10 shadow-xl max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 bg-purple-50 text-purple-700 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-purple-200">
+            🏢
+          </div>
+          <h2 className="text-xl font-extrabold text-gray-900 mb-2">
+            Recruiter Login Required
+          </h2>
+          <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+            Please sign in to your company recruiter account to access job management, publish career openings, and review candidate applications.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowRecruiterLogin(true)}
+              className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              🏢 Sign In to Recruiter Portal
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+            >
+              ← Back to Job Portal Homepage
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50/50 flex flex-col">
@@ -58,7 +92,7 @@ const Dashboard = () => {
 
               <button
                 onClick={logout}
-                className="bg-gray-100 hover:bg-rose-50 text-gray-600 hover:text-rose-600 border border-gray-200 hover:border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                className="bg-gray-100 hover:bg-rose-50 text-gray-600 hover:text-rose-600 border border-gray-200 hover:border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 title="Logout"
               >
                 Logout
