@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import CandidateAuthModal from "./CandidateAuthModal";
+import PdfPreviewModal from "./PdfPreviewModal";
 
 const QuickApplyModal = ({ job, isOpen, onClose }) => {
   const { user } = useUser();
@@ -13,7 +14,7 @@ const QuickApplyModal = ({ job, isOpen, onClose }) => {
     backendUrl,
     userData,
     candidateUploadedResume,
-    setCandidateUploadedResume,
+    saveUploadedPdfResume,
     candidateBuiltResume,
     addCandidateApplication
   } = useContext(AppContext);
@@ -22,10 +23,11 @@ const QuickApplyModal = ({ job, isOpen, onClose }) => {
   const [coverNote, setCoverNote] = useState(
     "Hi Recruiter, I am very interested in this position. My technical experience aligns closely with your expectations!"
   );
-  const [resumeType, setResumeType] = useState("uploaded"); // 'uploaded' | 'built' | 'new'
-  const [newPdfFile, setNewPdfFile] = useState(null);
+  const [resumeType, setResumeType] = useState("uploaded"); // 'uploaded' | 'built'
+  const [newPdfObj, setNewPdfObj] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [previewPdfObj, setPreviewPdfObj] = useState(null);
 
   if (!isOpen || !job) return null;
 
@@ -44,19 +46,31 @@ const QuickApplyModal = ({ job, isOpen, onClose }) => {
     : userData?.email || "rs71416821@gmail.com";
 
   // Resume file preview reference
-  const uploadedPdfName = newPdfFile
-    ? newPdfFile.name
+  const activePdfName = newPdfObj
+    ? newPdfObj.name
     : candidateUploadedResume
     ? candidateUploadedResume.name
     : userData?.resume
     ? "Rahul_Singh_Resume.pdf"
     : null;
 
-  const uploadedPdfUrl = newPdfFile
-    ? URL.createObjectURL(newPdfFile)
+  const activePdfUrl = newPdfObj
+    ? newPdfObj.url
     : candidateUploadedResume
     ? candidateUploadedResume.url
     : userData?.resume || "#";
+
+  const handlePdfFileSelect = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const pdfData = { name: file.name, url: e.target.result };
+      setNewPdfObj(pdfData);
+      saveUploadedPdfResume(pdfData);
+      toast.success(`📄 Resume PDF attached: ${file.name}`);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleQuickSubmit = async (e) => {
     e.preventDefault();
@@ -70,19 +84,12 @@ const QuickApplyModal = ({ job, isOpen, onClose }) => {
       setSubmitting(true);
 
       // Determine active submitted resume link/name
-      let activeResumeName = uploadedPdfName || "Candidate Resume.pdf";
-      let activeResumeUrl = uploadedPdfUrl;
+      let activeResumeName = activePdfName || "Candidate Resume.pdf";
+      let activeResumeUrl = activePdfUrl;
 
       if (resumeType === "built" && candidateBuiltResume) {
         activeResumeName = `Built Resume (${candidateBuiltResume.name} - ${candidateBuiltResume.title})`;
         activeResumeUrl = "#built_resume";
-      }
-
-      // Save new uploaded PDF if selected
-      if (newPdfFile) {
-        const fileData = { name: newPdfFile.name, url: URL.createObjectURL(newPdfFile) };
-        setCandidateUploadedResume(fileData);
-        localStorage.setItem("candidate_uploaded_resume", JSON.stringify(fileData));
       }
 
       // Construct application object
@@ -211,20 +218,19 @@ const QuickApplyModal = ({ job, isOpen, onClose }) => {
 
                 {resumeType === "uploaded" && (
                   <div className="pl-6 space-y-2">
-                    {uploadedPdfName ? (
+                    {activePdfName ? (
                       <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl flex items-center justify-between">
-                        <span className="font-semibold text-emerald-900 text-xs">
-                          📄 {uploadedPdfName}
+                        <span className="font-semibold text-emerald-900 text-xs truncate max-w-[220px]">
+                          📄 {activePdfName}
                         </span>
-                        {uploadedPdfUrl !== "#" && (
-                          <a
-                            href={uploadedPdfUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-lg text-[10px]"
+                        {activePdfUrl !== "#" && (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewPdfObj({ name: activePdfName, url: activePdfUrl })}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-lg text-[10px] cursor-pointer"
                           >
                             👁️ View PDF
-                          </a>
+                          </button>
                         )}
                       </div>
                     ) : null}
@@ -236,7 +242,7 @@ const QuickApplyModal = ({ job, isOpen, onClose }) => {
                         accept="application/pdf"
                         onChange={(e) => {
                           if (e.target.files[0]) {
-                            setNewPdfFile(e.target.files[0]);
+                            handlePdfFileSelect(e.target.files[0]);
                           }
                         }}
                         hidden
@@ -313,6 +319,12 @@ const QuickApplyModal = ({ job, isOpen, onClose }) => {
       <CandidateAuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+      />
+
+      <PdfPreviewModal
+        pdfObj={previewPdfObj}
+        isOpen={Boolean(previewPdfObj)}
+        onClose={() => setPreviewPdfObj(null)}
       />
     </>
   );
