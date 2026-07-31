@@ -1,65 +1,153 @@
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
+import { AppContext } from "../contex/AppContex";
 
-const Dashboard = ()=>{
+const Dashboard = () => {
   const navigate = useNavigate();
- 
+  const { companyData, setCompanyData, setCompanyToken, companyToken } = useContext(AppContext);
 
-  return(
-    <div className="min-h-screen">
+  // Function to logout company
+  const logout = () => {
+    setCompanyToken(null);
+    localStorage.removeItem("companyToken");
+    localStorage.removeItem("company Token");
+    setCompanyData(null);
+    navigate("/");
+  };
 
-      {/* navbar for Rec panel */}
-      <div className="shadow py-4">
-        <div className="px-5 flex justify-between items-center">
-          <img onClick={e=>navigate("/")} className="max-sm:w-32 cursor-pointer" src={assets.logo} alt="" />
-          <div className="flex items-center gap-3">
-            <p className="max-sm:hidden">Welcome, To Dashboard</p>
-            <div className="relative group">
-              <img className="w-8 border border-white rounded-full" src={assets.company_icon} alt="" />
-              <div className="absolute hidden group-hover:block top-0 right-0 z-10 text-black rounded pt-12 ">
-                <ul className="list-none m-0 p-2 bg-white rounded-md border border-blue-100 text-sm">
-                  <li className="py-1 px-2 cursor-pointer pr-10">Logout</li>
-                </ul>
-              </div>
+  const companyName = companyData ? companyData.name : "Slack Tech Enterprises";
+  const hasLogo = companyData && companyData.image && companyData.image.length > 5;
+
+  useEffect(() => {
+    if (window.location.pathname === "/dashboard") {
+      navigate("/dashboard/manage-jobs");
+    }
+  }, [navigate]);
+
+  return (
+    <div className="min-h-screen bg-gray-50/50 flex flex-col">
+      
+      {/* Recruiter Navbar */}
+      <header className="bg-white border-b border-gray-200 shadow-2xs py-3.5 px-4 sm:px-8">
+        <div className="flex justify-between items-center container mx-auto">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+            <img className="h-8 object-contain" src={assets.logo} alt="Logo" />
+            <span className="bg-purple-100 text-purple-800 border border-purple-200 text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full max-sm:hidden">
+              Recruiter Hub
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <p className="text-xs sm:text-sm font-semibold text-gray-800">
+                Welcome, <span className="text-purple-700 font-extrabold">{companyName}</span>
+              </p>
+              
+              {hasLogo ? (
+                <img
+                  className="w-9 h-9 object-cover border-2 border-purple-500 rounded-full p-0.5"
+                  src={companyData.image}
+                  alt={companyName}
+                />
+              ) : (
+                <div className="w-9 h-9 bg-purple-700 text-white font-extrabold text-sm rounded-full flex items-center justify-center shadow-2xs">
+                  {companyName.charAt(0)}
+                </div>
+              )}
+
+              <button
+                onClick={logout}
+                className="bg-gray-100 hover:bg-rose-50 text-gray-600 hover:text-rose-600 border border-gray-200 hover:border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                title="Logout"
+              >
+                Logout
+              </button>
             </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Recruiter Analytics Metrics Strip */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white py-4 px-4 sm:px-8 border-b border-slate-800">
+        <div className="container mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          <div className="p-2">
+            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Active Postings</p>
+            <p className="text-xl sm:text-2xl font-extrabold text-blue-400">8</p>
+          </div>
+          <div className="p-2">
+            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Applicants Received</p>
+            <p className="text-xl sm:text-2xl font-extrabold text-indigo-400">148</p>
+          </div>
+          <div className="p-2">
+            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Hired / Accepted</p>
+            <p className="text-xl sm:text-2xl font-extrabold text-emerald-400">24</p>
+          </div>
+          <div className="p-2">
+            <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Pending Reviews</p>
+            <p className="text-xl sm:text-2xl font-extrabold text-amber-400">18</p>
           </div>
         </div>
       </div>
 
-      <div className="flex items-start">
-        {/* left sidebar to add job,manage jobs view applications */}
+      {/* Main Recruiter Body & Sidebar */}
+      <div className="flex-1 flex container mx-auto">
         
-        <div className="inline-block min-h-screen border-r-2 border-gray-300">
-          <ul className="flex flex-col items-start pt-5 text-gray-800 ">
-            <NavLink className={({isActive})=>` flex items-center p-3 sm:px-6 gap-2 w-full hover:bg-gray-100 ${isActive && 'bg-blue-100 border-r-4 border-blue-500'}`} to={"/dashboard/add-job"}>
-            <img className="min-w-4" src={assets.add_icon} alt="" />
-            <p  className="max-sm:hidden">Add Job</p>
-
+        {/* Left Sidebar */}
+        <aside className="w-16 sm:w-64 bg-white border-r border-gray-200 py-6 min-h-screen">
+          <ul className="flex flex-col gap-1.5 px-2">
+            <NavLink
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 sm:px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  isActive
+                    ? "bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                }`
+              }
+              to={"/dashboard/manage-jobs"}
+            >
+              <img className="h-5 w-5 opacity-75" src={assets.home_icon} alt="" />
+              <span className="max-sm:hidden">Manage Jobs</span>
             </NavLink>
 
-             <NavLink className={({isActive})=>` flex items-center p-3 sm:px-6 gap-2 w-full hover:bg-gray-100 ${isActive && 'bg-blue-100 border-r-4 border-blue-500'}`} to={"/dashboard/manage-jobs"}>
-            <img className="min-w-4" src={assets.home_icon} alt="" />
-            <p  className="max-sm:hidden">Manage Jobs</p>
-
+            <NavLink
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 sm:px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  isActive
+                    ? "bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                }`
+              }
+              to={"/dashboard/add-job"}
+            >
+              <img className="h-5 w-5 opacity-75" src={assets.add_icon} alt="" />
+              <span className="max-sm:hidden">Post New Job</span>
             </NavLink>
 
-             <NavLink className={({isActive})=>` flex items-center p-3 sm:px-6 gap-2 w-full hover:bg-gray-100 ${isActive && 'bg-blue-100 border-r-4 border-blue-500'}`} to={"/dashboard/view-application"}>
-            <img className="min-w-4" src={assets.person_tick_icon} alt="" />
-            <p className="max-sm:hidden">View Applications</p>
-
+            <NavLink
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 sm:px-5 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  isActive
+                    ? "bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                }`
+              }
+              to={"/dashboard/view-application"}
+            >
+              <img className="h-5 w-5 opacity-75" src={assets.person_tick_icon} alt="" />
+              <span className="max-sm:hidden">View Applicants</span>
             </NavLink>
           </ul>
-        </div>
+        </aside>
 
-        <div>
+        {/* Content Outlet */}
+        <main className="flex-1 p-4 sm:p-8">
           <Outlet />
-        </div>
-
+        </main>
 
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Dashboard;
