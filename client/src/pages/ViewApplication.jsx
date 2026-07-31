@@ -5,11 +5,13 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../components/Loding";
 import ApplicantDetailsModal from "../components/ApplicantDetailsModal";
+import ViewResumeModal from "../components/ViewResumeModal";
 
 const ViewApplication = () => {
   const { backendUrl, companyToken, userApplications, companyData } = useContext(AppContext);
   const [applicants, setApplicants] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [resumeModalApplicant, setResumeModalApplicant] = useState(null);
 
   // Function to fetch company job Applications data
   const fetchCompanyJobApplications = async () => {
@@ -130,7 +132,7 @@ const ViewApplication = () => {
                       </td>
 
                       <td className="py-3.5 px-4">
-                        {candidate.resume && candidate.resume !== "#" ? (
+                        {candidate.resume && candidate.resume !== "#" && !candidate.resume.includes("#built_resume") ? (
                           <a
                             href={candidate.resume}
                             target="_blank"
@@ -141,10 +143,10 @@ const ViewApplication = () => {
                           </a>
                         ) : (
                           <button
-                            onClick={() => setSelectedApplicant(applicant)}
-                            className="bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-xs px-3 py-1.5 rounded-xl border border-blue-200 inline-flex items-center gap-1 transition-colors"
+                            onClick={() => setResumeModalApplicant(applicant)}
+                            className="bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs px-3.5 py-1.5 rounded-xl border border-purple-200 inline-flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                           >
-                            <span>📄 View Candidate Profile</span>
+                            <span>📄 Open Candidate Resume</span>
                           </button>
                         )}
                       </td>
@@ -152,9 +154,9 @@ const ViewApplication = () => {
                       <td className="py-3.5 px-4 text-center">
                         <button
                           onClick={() => setSelectedApplicant(applicant)}
-                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3.5 py-1.5 rounded-xl border border-indigo-200 transition-colors"
+                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3.5 py-1.5 rounded-xl border border-indigo-200 transition-colors cursor-pointer"
                         >
-                          👁️ Inspect Details
+                          🔍 Inspect Details
                         </button>
                       </td>
 
@@ -193,6 +195,13 @@ const ViewApplication = () => {
           </table>
         </div>
       </div>
+
+      {/* View Candidate Resume Modal */}
+      <ViewResumeModal
+        applicant={resumeModalApplicant}
+        isOpen={Boolean(resumeModalApplicant)}
+        onClose={() => setResumeModalApplicant(null)}
+      />
 
       {/* Recruiter Candidate Details Inspection Modal */}
       <ApplicantDetailsModal
