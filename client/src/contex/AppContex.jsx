@@ -21,7 +21,9 @@ export const AppContextProvider = (props) => {
   const [companyToken, setCompanyToken] = useState(null);
   const [companyData, setCompanyData] = useState(null);
 
+  // User data is strictly linked to active session
   const [userData, setUserData] = useState(() => {
+    if (!user) return null;
     try {
       const stored = localStorage.getItem("candidate_user_data");
       return stored ? JSON.parse(stored) : null;
@@ -43,7 +45,6 @@ export const AppContextProvider = (props) => {
   // Save Applications to localStorage whenever updated
   const addCandidateApplication = (newApp) => {
     setUserApplications((prev) => {
-      // Check for duplicates
       const exists = prev.some(
         (app) => app.jobId?._id === newApp.jobId?._id || app._id === newApp._id
       );
@@ -90,7 +91,7 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Uploaded PDF Resume State (Persisted)
+  // Uploaded PDF Resume State (Permanently Persisted until user explicitly updates)
   const [candidateUploadedResume, setCandidateUploadedResume] = useState(() => {
     try {
       const stored = localStorage.getItem("candidate_uploaded_resume");
@@ -100,7 +101,7 @@ export const AppContextProvider = (props) => {
     }
   });
 
-  // Built-in Candidate Resume State (Persisted)
+  // Built-in Candidate Resume State (Permanently Persisted)
   const [candidateBuiltResume, setCandidateBuiltResume] = useState(() => {
     try {
       const stored = localStorage.getItem("builtResume");
@@ -165,7 +166,7 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Fetch company data cleanly without raw toasts
+  // Fetch company data cleanly
   const fetchCompanyData = async () => {
     if (!companyToken) return;
     try {
@@ -181,7 +182,7 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Fetch user data cleanly without raw toasts
+  // Fetch user data cleanly
   const fetchUserData = async () => {
     if (!user) return;
     try {
@@ -196,11 +197,11 @@ export const AppContextProvider = (props) => {
         localStorage.setItem("candidate_user_data", JSON.stringify(data.user));
       }
     } catch {
-      // Suppress network error toasts
+      // Maintain session state
     }
   };
 
-  // Fetch user's applied applications data cleanly without raw toasts
+  // Fetch user's applied applications data cleanly
   const fetchUserApplications = async () => {
     if (!user) return;
     try {
@@ -239,6 +240,8 @@ export const AppContextProvider = (props) => {
     if (user) {
       fetchUserData();
       fetchUserApplications();
+    } else {
+      setUserData(null);
     }
   }, [user]);
 

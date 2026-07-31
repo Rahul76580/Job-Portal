@@ -105,6 +105,15 @@ const ViewApplication = () => {
                   const candidate = applicant.userId || {};
                   const job = applicant.jobId || {};
 
+                  // Check if candidate submitted a PDF file or Built Resume
+                  const isPdfResume =
+                    (candidate.resume && (candidate.resume.includes(".pdf") || candidate.resume.startsWith("blob:") || candidate.resume.startsWith("http") && !candidate.resume.includes("#built_resume"))) ||
+                    (candidate.resumeName && candidate.resumeName.includes(".pdf"));
+
+                  const pdfResumeUrl = (candidate.resume && candidate.resume !== "#" && candidate.resume !== "#built_resume")
+                    ? candidate.resume
+                    : "#";
+
                   return (
                     <tr key={applicant._id || index} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-3.5 px-4 font-semibold text-gray-400">{index + 1}</td>
@@ -132,12 +141,12 @@ const ViewApplication = () => {
                       </td>
 
                       <td className="py-3.5 px-4">
-                        {candidate.resume && candidate.resume !== "#" && !candidate.resume.includes("#built_resume") ? (
+                        {isPdfResume && pdfResumeUrl !== "#" ? (
                           <a
-                            href={candidate.resume}
+                            href={pdfResumeUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs px-3.5 py-1.5 rounded-xl border border-emerald-200 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs px-3.5 py-1.5 rounded-xl border border-emerald-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
                           >
                             <span>👁️ View PDF Resume</span>
                           </a>
@@ -146,7 +155,7 @@ const ViewApplication = () => {
                             onClick={() => setResumeModalApplicant(applicant)}
                             className="bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs px-3.5 py-1.5 rounded-xl border border-purple-200 inline-flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                           >
-                            <span>📄 Open Candidate Resume</span>
+                            <span>📄 Open Built Resume</span>
                           </button>
                         )}
                       </td>
