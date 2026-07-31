@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "Production-Ready Full Stack Job Portal Application",
   "private": true,
+  "type": "module",
   "scripts": {
-    "server": "npm run --prefix server server",
-    "dev": "npm run --prefix client dev",
-    "start": "npm run --prefix server start",
+    "postinstall": "npm install --prefix client && npm install --prefix server",
     "build": "npm run build --prefix client",
-    "install:all": "npm install --prefix client && npm install --prefix server"
+    "start": "node server/server.js",
+    "server": "npm run --prefix server server",
+    "dev": "npm run --prefix client dev"
   },
   "keywords": [
     "job-portal",
