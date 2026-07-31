@@ -21,7 +21,7 @@ export const AppContextProvider = (props) => {
   const [companyToken, setCompanyToken] = useState(null);
   const [companyData, setCompanyData] = useState(null);
 
-  // User data strictly linked to session
+  // User data strictly linked to active Clerk session
   const [userData, setUserData] = useState(() => {
     if (!user) return null;
     try {
@@ -42,7 +42,7 @@ export const AppContextProvider = (props) => {
     }
   });
 
-  // Save Applications to localStorage whenever updated
+  // Save Application to localStorage whenever candidate submits
   const addCandidateApplication = (newApp) => {
     setUserApplications((prev) => {
       const exists = prev.some(
@@ -55,7 +55,7 @@ export const AppContextProvider = (props) => {
     });
   };
 
-  // Update application status (Accepted / Rejected / Pending)
+  // Live Update application status (Accepted / Rejected / Pending)
   const updateApplicationStatus = (appId, newStatus) => {
     setUserApplications((prev) => {
       const updated = prev.map((app) =>
@@ -102,23 +102,23 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Uploaded PDF Resume State (Permanently Persisted)
+  // Uploaded PDF Resume State (PERMANENTLY PERSISTED until candidate explicitly updates)
   const [candidateUploadedResume, setCandidateUploadedResume] = useState(() => {
     try {
-      const stored = localStorage.getItem("candidate_uploaded_pdf");
+      const stored = localStorage.getItem("active_candidate_pdf_resume");
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
   });
 
-  // Save Uploaded PDF Permanently
+  // Save Uploaded PDF Permanently in localStorage
   const saveUploadedPdfResume = (pdfObj) => {
     setCandidateUploadedResume(pdfObj);
-    localStorage.setItem("candidate_uploaded_pdf", JSON.stringify(pdfObj));
+    localStorage.setItem("active_candidate_pdf_resume", JSON.stringify(pdfObj));
   };
 
-  // Built-in Candidate Resume State (Permanently Persisted)
+  // Built-in Candidate Resume State (PERMANENTLY PERSISTED)
   const [candidateBuiltResume, setCandidateBuiltResume] = useState(() => {
     try {
       const stored = localStorage.getItem("builtResume");

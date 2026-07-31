@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import Loading from "../components/Loding";
 import ApplicantDetailsModal from "../components/ApplicantDetailsModal";
 import ViewResumeModal from "../components/ViewResumeModal";
+import PdfPreviewModal from "../components/PdfPreviewModal";
 
 const ViewApplication = () => {
   const { backendUrl, companyToken, userApplications, companyData, updateApplicationStatus } =
@@ -13,6 +14,7 @@ const ViewApplication = () => {
   const [applicants, setApplicants] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [resumeModalApplicant, setResumeModalApplicant] = useState(null);
+  const [previewPdfObj, setPreviewPdfObj] = useState(null);
 
   // Function to fetch company job Applications data
   const fetchCompanyJobApplications = async () => {
@@ -118,6 +120,8 @@ const ViewApplication = () => {
                     ? candidate.resume
                     : "#";
 
+                  const pdfResumeName = candidate.resumeName || `${candidate.name || "Candidate"}_Resume.pdf`;
+
                   return (
                     <tr key={applicant._id || index} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-3.5 px-4 font-semibold text-gray-400">{index + 1}</td>
@@ -146,14 +150,12 @@ const ViewApplication = () => {
 
                       <td className="py-3.5 px-4">
                         {isPdfResume && pdfResumeUrl !== "#" ? (
-                          <a
-                            href={pdfResumeUrl}
-                            target="_blank"
-                            rel="noreferrer"
+                          <button
+                            onClick={() => setPreviewPdfObj({ name: pdfResumeName, url: pdfResumeUrl })}
                             className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs px-3.5 py-1.5 rounded-xl border border-emerald-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                           >
                             <span>👁️ View PDF Resume</span>
-                          </a>
+                          </button>
                         ) : (
                           <button
                             onClick={() => setResumeModalApplicant(applicant)}
@@ -214,6 +216,13 @@ const ViewApplication = () => {
         applicant={resumeModalApplicant}
         isOpen={Boolean(resumeModalApplicant)}
         onClose={() => setResumeModalApplicant(null)}
+      />
+
+      {/* PDF Document Modal Previewer */}
+      <PdfPreviewModal
+        pdfObj={previewPdfObj}
+        isOpen={Boolean(previewPdfObj)}
+        onClose={() => setPreviewPdfObj(null)}
       />
 
       {/* Recruiter Candidate Details Inspection Modal */}

@@ -7,6 +7,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import moment from "moment";
 import ResumeBuilderModal from "../components/ResumeBuilderModal";
+import PdfPreviewModal from "../components/PdfPreviewModal";
 
 const Application = () => {
   const { user } = useUser();
@@ -17,6 +18,7 @@ const Application = () => {
   const [resume, setResume] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [previewPdfObj, setPreviewPdfObj] = useState(null);
 
   const {
     backendUrl,
@@ -111,25 +113,25 @@ const Application = () => {
     switch (status) {
       case "Accepted":
         return (
-          <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1">
+          <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1 shadow-2xs">
             ✓ Accepted / Offer Made
           </span>
         );
       case "Rejected":
         return (
-          <span className="bg-rose-100 text-rose-800 border border-rose-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1">
+          <span className="bg-rose-100 text-rose-800 border border-rose-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1 shadow-2xs">
             ✕ Application Closed / Rejected
           </span>
         );
       case "Interview":
         return (
-          <span className="bg-purple-100 text-purple-800 border border-purple-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1">
+          <span className="bg-purple-100 text-purple-800 border border-purple-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1 shadow-2xs">
             📅 Interview Scheduled
           </span>
         );
       default:
         return (
-          <span className="bg-blue-100 text-blue-800 border border-blue-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1">
+          <span className="bg-blue-100 text-blue-800 border border-blue-300 text-xs px-3 py-1 rounded-full font-bold inline-flex items-center gap-1 shadow-2xs">
             ⏳ Application Under Review
           </span>
         );
@@ -228,14 +230,12 @@ const Application = () => {
                   </div>
                 </div>
 
-                <a
-                  href={activePdfUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition-colors"
+                <button
+                  onClick={() => setPreviewPdfObj({ name: activePdfName, url: activePdfUrl })}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <span>👁️ Preview / Download Resume PDF</span>
-                </a>
+                  <span>👁️ Preview / View PDF Resume</span>
+                </button>
               </div>
             ) : candidateBuiltResume ? (
               <div className="bg-indigo-50/80 border border-indigo-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -255,7 +255,7 @@ const Application = () => {
 
                 <button
                   onClick={() => setIsBuilderOpen(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-2xs transition-colors"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-2xs transition-colors cursor-pointer"
                 >
                   Edit Resume Data
                 </button>
@@ -351,6 +351,12 @@ const Application = () => {
       <ResumeBuilderModal
         isOpen={isBuilderOpen}
         onClose={() => setIsBuilderOpen(false)}
+      />
+
+      <PdfPreviewModal
+        pdfObj={previewPdfObj}
+        isOpen={Boolean(previewPdfObj)}
+        onClose={() => setPreviewPdfObj(null)}
       />
 
       <Footer />
