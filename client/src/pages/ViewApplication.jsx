@@ -8,7 +8,8 @@ import ApplicantDetailsModal from "../components/ApplicantDetailsModal";
 import ViewResumeModal from "../components/ViewResumeModal";
 
 const ViewApplication = () => {
-  const { backendUrl, companyToken, userApplications, companyData } = useContext(AppContext);
+  const { backendUrl, companyToken, userApplications, companyData, updateApplicationStatus } =
+    useContext(AppContext);
   const [applicants, setApplicants] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [resumeModalApplicant, setResumeModalApplicant] = useState(null);
@@ -45,11 +46,14 @@ const ViewApplication = () => {
     }
   };
 
-  // Function to update job application status
+  // Function to update job application status (Reflected live in Candidate Applications)
   const changeJobApplicationStatus = async (id, status) => {
     setApplicants((prev) =>
       prev.map((item) => (item._id === id ? { ...item, status } : item))
     );
+
+    // Live update candidate applications in AppContext & localStorage
+    updateApplicationStatus(id, status);
     toast.success(`Application status updated to ${status}`);
 
     try {
@@ -107,7 +111,7 @@ const ViewApplication = () => {
 
                   // Check if candidate submitted a PDF file or Built Resume
                   const isPdfResume =
-                    (candidate.resume && (candidate.resume.includes(".pdf") || candidate.resume.startsWith("blob:") || candidate.resume.startsWith("http") && !candidate.resume.includes("#built_resume"))) ||
+                    (candidate.resume && (candidate.resume.includes(".pdf") || candidate.resume.startsWith("data:") || candidate.resume.startsWith("blob:") || (candidate.resume.startsWith("http") && !candidate.resume.includes("#built_resume")))) ||
                     (candidate.resumeName && candidate.resumeName.includes(".pdf"));
 
                   const pdfResumeUrl = (candidate.resume && candidate.resume !== "#" && candidate.resume !== "#built_resume")
@@ -146,7 +150,7 @@ const ViewApplication = () => {
                             href={pdfResumeUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs px-3.5 py-1.5 rounded-xl border border-emerald-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs px-3.5 py-1.5 rounded-xl border border-emerald-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                           >
                             <span>👁️ View PDF Resume</span>
                           </a>

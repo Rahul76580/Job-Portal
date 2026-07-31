@@ -25,7 +25,7 @@ const Application = () => {
     fetchUserData,
     fetchUserApplications,
     candidateUploadedResume,
-    setCandidateUploadedResume,
+    saveUploadedPdfResume,
     candidateBuiltResume
   } = useContext(AppContext);
 
@@ -61,6 +61,20 @@ const Application = () => {
   const candidateName = (user.firstName || "") + " " + (user.lastName || "") || userData?.name || "Rahul Singh";
   const candidateEmail = user.primaryEmailAddress?.emailAddress || userData?.email || "rs71416821@gmail.com";
 
+  const handlePdfUpload = (file) => {
+    if (!file) return;
+    setResume(file);
+    setIsEdit(true);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const pdfObj = { name: file.name, url: e.target.result };
+      saveUploadedPdfResume(pdfObj);
+      toast.success(`📄 Resume PDF attached: ${file.name}`);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const updateResume = async () => {
     if (!resume) {
       return toast.warn("Please select a valid PDF resume file");
@@ -68,10 +82,6 @@ const Application = () => {
 
     try {
       setUploading(true);
-
-      const fileData = { name: resume.name, url: URL.createObjectURL(resume) };
-      setCandidateUploadedResume(fileData);
-      localStorage.setItem("candidate_uploaded_resume", JSON.stringify(fileData));
 
       const formData = new FormData();
       formData.append("resume", resume);
@@ -81,7 +91,7 @@ const Application = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success("Resume uploaded successfully!");
+      toast.success("Resume saved successfully!");
       fetchUserData();
     } catch (error) {
       toast.success(`Resume attached: ${resume.name}`);
@@ -174,8 +184,9 @@ const Application = () => {
                 <input
                   id="resumeUpload"
                   onChange={(e) => {
-                    setResume(e.target.files[0]);
-                    setIsEdit(true);
+                    if (e.target.files[0]) {
+                      handlePdfUpload(e.target.files[0]);
+                    }
                   }}
                   accept="application/pdf"
                   type="file"

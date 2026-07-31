@@ -21,7 +21,7 @@ export const AppContextProvider = (props) => {
   const [companyToken, setCompanyToken] = useState(null);
   const [companyData, setCompanyData] = useState(null);
 
-  // User data is strictly linked to active session
+  // User data strictly linked to session
   const [userData, setUserData] = useState(() => {
     if (!user) return null;
     try {
@@ -50,6 +50,17 @@ export const AppContextProvider = (props) => {
       );
       if (exists) return prev;
       const updated = [newApp, ...prev];
+      localStorage.setItem("candidate_applications", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Update application status (Accepted / Rejected / Pending)
+  const updateApplicationStatus = (appId, newStatus) => {
+    setUserApplications((prev) => {
+      const updated = prev.map((app) =>
+        app._id === appId || app.jobId?._id === appId ? { ...app, status: newStatus } : app
+      );
       localStorage.setItem("candidate_applications", JSON.stringify(updated));
       return updated;
     });
@@ -91,15 +102,21 @@ export const AppContextProvider = (props) => {
     }
   };
 
-  // Uploaded PDF Resume State (Permanently Persisted until user explicitly updates)
+  // Uploaded PDF Resume State (Permanently Persisted)
   const [candidateUploadedResume, setCandidateUploadedResume] = useState(() => {
     try {
-      const stored = localStorage.getItem("candidate_uploaded_resume");
+      const stored = localStorage.getItem("candidate_uploaded_pdf");
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
   });
+
+  // Save Uploaded PDF Permanently
+  const saveUploadedPdfResume = (pdfObj) => {
+    setCandidateUploadedResume(pdfObj);
+    localStorage.setItem("candidate_uploaded_pdf", JSON.stringify(pdfObj));
+  };
 
   // Built-in Candidate Resume State (Permanently Persisted)
   const [candidateBuiltResume, setCandidateBuiltResume] = useState(() => {
@@ -264,6 +281,7 @@ export const AppContextProvider = (props) => {
     userApplications,
     setUserApplications,
     addCandidateApplication,
+    updateApplicationStatus,
     savedJobs,
     toggleSaveJob,
     calculateMatchScore,
@@ -271,7 +289,7 @@ export const AppContextProvider = (props) => {
     changeCurrency,
     formatSalary,
     candidateUploadedResume,
-    setCandidateUploadedResume,
+    saveUploadedPdfResume,
     candidateBuiltResume,
     setCandidateBuiltResume,
     activityFeed,
